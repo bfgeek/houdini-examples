@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<style>
+#container {
+  background-color: #F5F5F5;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-image: paint(background);
+}
+
+.meeting {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-image: paint(event);
+}
+
+body {
+  height: 100%;
+}
+
+html {
+  height: 100%;
+}
+</style>
+<div id='container'>
+</div>
+<script>
+paintWorker.importScripts('calendarPaint.js');
+
+var meetings = [];
+
+var Meeting = function(id, day, time, duration, title, color) {
+  this.element = document.createElement('div');
+  this.element.id = 'meeting' + id;
+  this.element.classList.add('meeting');
+  container.appendChild(this.element);
+  meetings.push(this);
+  this.setDay(day);
+  this.setTime(time);
+  this.setDuration(duration);
+  this.setTitle(title);
+  this.setColor(color || '#7BAAF7');
+  this.setState('normal');
+}
+
+Meeting.prototype = {
+  setDay: function(day) {
+    this.day = day;
+    this.update();
+  },
+  setTime: function(time) {
+    this.time = time;
+    this.update();
+  },
+  setDuration: function(duration) {
+    this.duration = duration;
+    this.update();
+  },
+  setTitle: function(title) {
+    this.title = title;
+    this.update();
+  },
+  setColor: function(color) {
+    this.color = color;
+    this.update();
+  },
+  update: function() {
+    this.element.setAttribute('style', '--day: ' + this.day + '; --time: ' + this.time + '; --duration: ' + this.duration + '; --title: \'' + this.title + '\'; --x: ' + this.x + '; --y: ' + this.y + '; --color: ' + this.color + '; --state: ' + this.state + '; --dx: ' + this.dragX + '; --dy: ' + this.dragY);
+  },
+  setX: function(x) {
+    this.x = x;
+    this.update();
+  },
+  setY: function(y) {
+    this.y = y;
+    this.update();
+  },
+  setState: function(state) {
+    this.state = state;
+    if (this.state == 'dragging') {
+      this.dragX = this.x;
+      this.dragY = this.y;
+    }
+    this.update();
+  }
+}
+
+setTimeout(function() {
+  new Meeting(1, "Monday", 1600, 30, "OMG BEER");
+  new Meeting(2, "Wednesday", 1230, 120, "Discuss Ponies");
+  new Meeting(3, "Friday", 930, 45, "Ojan : Levi 1:1");
+  container.setAttribute('style', '--update: 0');
+}, 0);
+
+var selectedMeeting = undefined;
+
+container.addEventListener('mousemove', function(e) {
+
+  var skipSelectedUpdate = ((selectedMeeting !== undefined) && (selectedMeeting.state == 'dragging'));
+  if (!skipSelectedUpdate)
+    selectedMeeting = undefined;
+
+  for (var i = 0; i < meetings.length; i++) {
+    updateMeetingState(meetings[i], e.x, e.y, skipSelectedUpdate);
+  }
+});
+
+var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function updateMeetingState(meeting, ex, ey, skipSelectedUpdate) {
+  var width = container.clientWidth;
+  var height = container.clientHeight;
+
+  meeting.setX(ex - container.offsetLeft);
+  meeting.setY(ey - container.offsetTop);
+
+  var x = days.indexOf(meeting.day);
+
+  var time = meeting.time;
+  var y = Math.floor(time / 100) - 9;
+  y += (time % 100) / 60;
+
+  var duration = meeting.duration / 60;
+
+  var posX = Math.floor(x / 7 * width) + container.offsetLeft;
+  var posY = Math.floor(y / 8 * height) + container.offsetTop;
+  var posWidth = Math.floor(width / 7);
+  var posHeight = Math.floor(duration * height / 8);
+
+  if (skipSelectedUpdate)
+    return; 
+ 
+  if (ex >= posX && ex <= posX + posWidth && ey >= posY && ey <= posY + posHeight) {
+    meeting.setColor('#C6DAFC');
+    selectedMeeting = meeting;
+  } else {
+    meeting.setColor('#7BAAF7');
+  }
+}
+
+container.addEventListener('mousedown', function(e) {
+  if (selectedMeeting == undefined) return;
+
+  selectedMeeting.setColor('#57BB8A');
+  selectedMeeting.setState('dragging');
+
+});
+
+container.addEventListener('mouseup', function(e) {
+  selectedMeeting.setState('normal');
+
+  var x = days.indexOf(selectedMeeting.day);
+
+  var time = selectedMeeting.time;
+  var y = Math.floor(time / 100) - 9;
+  y += (time % 100) / 60;
+
+  var duration = selectedMeeting.duration / 60;
+
+  var width = container.clientWidth;
+  var height = container.clientHeight;
+  var posX = Math.floor(x / 7 * width) + container.offsetLeft;
+  var posY = Math.floor(y / 8 * height) + container.offsetTop;
+  var posWidth = Math.floor(width / 7);
+  var posHeight = Math.floor(duration * height / 8);
+
+  var deltax = posX - selectedMeeting.dragX + e.x;
+  var deltay = posY - selectedMeeting.dragY + e.y;
+
+  var xSnapped = false;
+  var ySnapped = false;
+
+  var snapx = Math.round(deltax * 7 / width);
+  var snapy = Math.round(deltay * 16 / height) / 2;
+  selectedMeeting.setDay(days[snapx]);
+  selectedMeeting.setTime(900 + Math.floor(snapy) * 100 + (snapy % 1) * 60);
+
+  updateMeetingState(selectedMeeting, e.x, e.y, false);
+});
+
+</script>

@@ -1,0 +1,217 @@
+<base href="//polygit.org/components/">
+<link rel="import" href="polymer/polymer.html">
+<link rel="import" href="iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="iron-resizable-behavior/iron-resizable-behavior.html">
+<dom-module id="neo-ripple">
+  <style>
+    :host {
+      @apply(--layout-fit);
+    }
+
+    #rippleElement {
+      @apply(--layout-fit);
+      background-image: paint(ripples);
+    }
+  </style>
+  <template>
+    <div id="rippleElement"></div>
+  </template>
+  <script>
+    'use strict';
+
+    try {
+      paintWorker.importScripts('ripple.js').then(function() {
+        console.log('Ripple custom paint imported!');
+      }).catch(function(e) {
+        console.error('Failed to import Ripple custom paint!');
+        console.error(e);
+      });
+    } catch (e) {
+      console.log('ERROR!', e.toString());
+    }
+
+    let NeoRipple = Polymer({
+      is: 'neo-ripple',
+
+      behaviors: [
+        Polymer.IronResizableBehavior
+      ],
+
+      properties: {
+        pressedDuration: {
+          type: Number,
+          value: 2000
+        },
+
+        releasedDuration: {
+          type: Number,
+          value: 800
+        },
+
+        pressed: {
+          type: Boolean,
+          value: false,
+          readOnly: true,
+          observer: '_pressedChanged'
+        }
+      },
+
+      listeners: {
+        'up': '_onUp',
+        'down': '_onDown',
+        'iron-resize': '_onIronResize'
+      },
+
+      created: function() {
+        this._rippleAnimationMap = new Map();
+        this._boundingRect = null;
+      },
+
+      addRipple: function(x, y) {
+        this._createRipple(x, y);
+        this._animateRipples();
+      },
+
+      get _currentDuration() {
+        return this.pressed ? this.pressedDuration : this.releasedDuration;
+      },
+
+      _animateRipples: function() {
+        this.$.rippleElement.setAttribute(
+          'style',
+          this._toStyle()
+        );
+
+        if (this._rippleAnimationMap.size === 0) {
+          return;
+        }
+
+        window.requestAnimationFrame(() => {
+          this._animateRipples();
+        });
+      },
+
+      _onUp: function() {
+        this._setPressed(false);
+      },
+
+      _onDown: function(event) {
+        this._setPressed(true);
+        this.addRipple(
+          event.detail.x - this._boundingRect.left,
+          event.detail.y - this._boundingRect.top
+        );
+      },
+
+      _onIronResize: function() {
+        this._boundingRect = this.getBoundingClientRect();
+      },
+
+      _pressedChanged: function(pressed) {
+        if (pressed) {
+          return;
+        }
+
+        console.log('Releasing ripples');
+        for (let rippleAnimation of this._rippleAnimationMap) {
+          let ripple = rippleAnimation[0];
+
+          if (!ripple.released) {
+            this._releaseRipple(ripple);
+          } else if (this._getProgressRatio(ripple) === 1) {
+            this._rippleAnimationMap.delete(ripple);
+          }
+        }
+      },
+
+      _createRipple: function(x, y) {
+        let that = this;
+        let ripple = Object.freeze({
+          x,
+          y,
+          get progress () {
+            return that._getProgressRatio(this);
+          }
+        });
+        let animation = this._createAnimation();
+
+        this._rippleAnimationMap.set(ripple, animation);
+
+        if (!this.pressed) {
+          this._releaseRipple(ripple);
+        }
+
+        return ripple;
+      },
+
+      _createAnimation: function() {
+        return this.animate(
+          {},
+          this._currentDuration
+        );
+      },
+
+      _releaseRipple: function(ripple) {
+        let pressedAnimation = this._rippleAnimationMap.get(ripple);
+        let that = this;
+        let releasedRipple = Object.freeze({
+          x: ripple.x,
+          y: ripple.y,
+          released: true,
+          releasedAt: this._getProgressRatio(ripple),
+          get progress () {
+            return that._getProgressRatio(this);
+          }
+        });
+        let releasedAnimation = this._createAnimation();
+
+        this._rippleAnimationMap.set(
+          releasedRipple,
+          releasedAnimation
+        );
+
+        this._rippleAnimationMap.delete(ripple);
+      },
+
+      _getProgressRatio: function(ripple) {
+        let animation = this._rippleAnimationMap.get(ripple);
+
+        return animation.currentTime /
+          animation.effect.timing.duration;
+      },
+
+      _toStyle: function() {
+        return `
+          --ripple-pressed-duration:${ this.pressedDuration };
+          --ripple-released-duration:${ this.releasedDuration };
+          ${ this._ripplesToProperty() }
+        `;
+      },
+
+      _ripplesToProperty: function() {
+        let ripples = [];
+
+        for (let rippleAnimation of this._rippleAnimationMap) {
+          let ripple = rippleAnimation[0];
+          let animation = rippleAnimation[1];
+
+          if (ripple.released && ripple.progress === 1) {
+            this._rippleAnimationMap.delete(ripple);
+            continue;
+          }
+
+          ripples.push(
+            `${ ripple.x } ${ ripple.y } ${ ripple.progress }${ ripple.released ? (' ' + ripple.releasedAt) : '' }`
+          );
+        }
+
+        return '--ripples:' + ripples.join(',') + ';';
+      },
+
+      _updateRipples: function() {
+        this._ripplesToStyle();
+      }
+    });
+  </script>
+</dom-module>
+

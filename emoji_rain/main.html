@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>✨☔️</title>
+<style>
+
+html {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-image: paint(foo);
+  --tick: 3;
+}
+
+</style>
+</head>
+<body>
+  <p>Make it rain, Houdini.</p>
+</body>
+
+<script>
+  // This works by default for strings, you only do this for number
+  //document.registerProperty("--tick", "<number>");
+  paintWorker.importScripts('paint.js');
+</script>
+
+<script>
+
+  animate();
+
+  var tick = 0;
+  function animate() {
+    var timeout = setTimeout(function() {
+      var animationFrame = window.requestAnimationFrame(animate);
+      document.body.setAttribute('style', '--tick: ' + tick++ +';');
+    }, 1000/60);
+  }
+
+</script>
+
+</html>

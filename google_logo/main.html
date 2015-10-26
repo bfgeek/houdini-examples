@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta charset="utf-8" />
+<title>index</title>
+<style>
+.logo {
+    height: 500px;
+    width: 200px;
+    background: top left/50% 50% paint(logo) repeat-x, bottom left/100% 50% paint(logo) no-repeat;
+    border: 1px solid;
+    --scale: 1;
+}
+</style>
+</head>
+<body>
+<div class="logo"></div>
+<div class="logo" style="width: 100%"></div>
+<div class="logo" style="--scale: 0"></div>
+</body>
+    <script>
+        document.registerProperty("--scale", "<number>");
+        document.registerProperty("--total", "<number>");
+        paintWorker.importScripts('paint.js');
+
+        logo = document.getElementsByClassName('logo')[0];
+        logo2 = document.getElementsByClassName('logo')[2];
+
+        var large = false;
+        var animation = null;
+        logo.addEventListener('click', function() {
+            animation = logo.animate([{width: '200px'}, {width: '100%'}], {duration: 500, fill: 'forwards', direction: large ? 'reverse' : 'normal', easing: 'ease'});
+            large = !large;
+        });
+
+        var func = function(totalTime) {
+            if (animation && animation.playState == 'finished') {
+                animation = null;
+            }
+            if (animation) console.log(animation.currentTime);
+            var progress = Math.max(0, Math.min(1, animation ? animation.currentTime / 500 : 1));
+            console.log(progress);
+            progress = large ? 1 - progress : progress;
+            console.log(progress);
+            logo.setAttribute('style', '--scale: ' + progress.toFixed(4) + '; --total: ' + totalTime);
+            requestAnimationFrame(func);
+
+            logo2.setAttribute('style', '--scale: 0; --total: ' + totalTime); 
+        };
+        requestAnimationFrame(func);
+    </script>
+</html>
