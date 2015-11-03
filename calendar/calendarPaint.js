@@ -1,36 +1,40 @@
 var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 registerPaint('event', function(ctx, width, height, styleMap) {
-  //console.log(JSON.stringify(styleMap));
+  // console.log(JSON.stringify(styleMap));
 
+  try {
 
-  var x = days.indexOf(styleMap['--day'].trim());
+    function styleMapget(name) {
+        return (styleMap.get(name).value || "").trim();
+    }
 
-  var time = Number(styleMap['--time']);
+  var x = days.indexOf(styleMapget('--day'));
+
+  var time = Number(styleMap.get('--time').value);
   var y = Math.floor(time / 100) - 9;
   y += (time % 100) / 60;
 
-  var duration = Number(styleMap['--duration']) / 60;
+  var duration = Number(styleMap.get('--duration').value) / 60;
 
   var posX = Math.floor(x / 7 * width);
   var posY = Math.floor(y / 8 * height);
   var posWidth = Math.floor(width / 7);
   var posHeight = Math.floor(duration * height / 8);
 
-  var mouseX = Number(styleMap['--x']);
-  var mouseY = Number(styleMap['--y']);
-
+  var mouseX = Number(styleMap.get('--x').value);
+  var mouseY = Number(styleMap.get('--y').value);
 
   var pp = [{x: posX, y: posY}, {x: posX + posWidth, y: posY}, {x: posX + posWidth, y: posY + posHeight}, {x: posX, y: posY + posHeight}];
   var sp = [{x: posX, y: posY}, {x: posX + posWidth, y: posY}, {x: posX + posWidth, y: posY + posHeight}, {x: posX, y: posY + posHeight}];
-  var dragging = styleMap['--state'].trim() == 'dragging';
-  var title = styleMap['--title'].trim();
+  var dragging = styleMapget('--state') == 'dragging';
+  var title = styleMapget('--title');
   title = title.slice(1, title.length - 1);
 
-  if (dragging) {
-    var dx = Number(styleMap['--dx'].trim());
-    var dy = Number(styleMap['--dy'].trim());
 
+  if (dragging) {
+    var dx = Number(styleMapget('--dx'));
+    var dy = Number(styleMapget('--dy'));
 
     var deltax = posX - dx + mouseX;
     var deltay = posY - dy + mouseY;
@@ -124,7 +128,8 @@ registerPaint('event', function(ctx, width, height, styleMap) {
 
   ctx.beginPath();
 
-  ctx.fillStyle = styleMap['--color'].trim();
+  ctx.fillStyle = styleMapget('--color');
+
   ctx.shadowBlur = 0;
   ctx.shadowColor = 'transparent';
   ctx.shadowOffsetX = 0;
@@ -159,6 +164,7 @@ registerPaint('event', function(ctx, width, height, styleMap) {
     ctx.fillRect(mouseX - 30, mouseY - 30, 60, 60);
   }
 
+  } catch (e) { console.log(e.stack); debugger; }
 }, ['--day', '--time', '--duration', '--color', '--x', '--y']);
 
 registerPaint('background', function(ctx, width, height, styleMap) {

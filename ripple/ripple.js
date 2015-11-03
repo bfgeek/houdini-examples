@@ -41,10 +41,10 @@ function parseRipples(ripples) {
 }
 
 registerPaint('ripples', function(context, width, height, style) {
-  let ripples = parseRipples(style['--ripples']);
-  let pressedDuration = parseFloat(style['--ripple-pressed-duration']);
-  let releasedDuration = parseFloat(style['--ripple-released-duration']);
-  let color = style['--ripple-color'] || 'blue';
+  let ripples = parseRipples(style.get('--ripples').value);
+  let pressedDuration = parseFloat(style.get('--ripple-pressed-duration').value);
+  let releasedDuration = parseFloat(style.get('--ripple-released-duration').value);
+  let color = style.get('--ripple-color').value || 'blue';
 
   context.fillStyle = color;
   ripples.forEach(function(ripple) {

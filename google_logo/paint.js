@@ -146,8 +146,8 @@ var GOOGLE_LOGO = [
 ];
 
 registerPaint('logo', function(ctx, width, height, styleMap) {
-    var actualTime = styleMap['--scale'];
-    var totalTime = styleMap['--total'] || 0;
+    var actualTime = styleMap.get('--scale').value;
+    var totalTime = styleMap.get('--total').value || 0;
     console.log(actualTime);
 
     ctx.translate(width / 2, height / 2);
