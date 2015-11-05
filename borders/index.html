@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>index</title>
+<style>
+body {
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Roboto","Oxygen","Ubuntu","Cantarell","Open Sans","Helvetica Neue",sans-serif;
+    margin-top: 50px;
+    width: 500px;
+}
+
+.title {
+    text-align: center;
+    font-size: 36px;
+    margin: 10px;
+    margin-bottom: 30px;
+}
+
+.body {
+    text-align: center;
+    margin: 0 10%;
+    max-width: 80%;
+}
+
+.quote {
+    display: flex;
+    font-size: 26px;
+    padding: 20px;
+    margin: 40px 20px 20px 20px;
+    background-image: paint(border);
+    text-align: center;
+    --border-corner-type: 1,1,1,1;
+    --border-corner-width: 2;
+    --border-corner-length: 20;
+    --border-corner-gradient: 1;
+}
+</style>
+</head>
+<body>
+<div class="body">
+<div class="title">Disrupt craft beer</div>
+Bicycle rights iPhone hashtag distillery butcher, tote bag fashion axe narwhal roof party. Listicle portland next level fingerstache, skateboard meditation yuccie. Seitan biodiesel single-origin coffee lomo lo-fi. Master cleanse bitters bushwick keffiyeh poutine marfa, cred 90's VHS echo park swag put a bird on it ethical. Disrupt tousled blue bottle leggings, yr biodiesel kitsch umami. Church-key kinfolk cardigan, bespoke next level narwhal chia taxidermy shoreditch chartreuse pork belly. Pork belly vegan chicharrones +1 venmo.
+<br>
+<div class="quote" style="--border-corner-length: 10">"Before they sold out scenester viral, whatever meditation."</div>
+<br>
+<div>Shabby chic brunch salvia pop-up. Thundercats austin iPhone fashion axe, beard tumblr meggings cronut lomo bushwick swag authentic. Bespoke drinking vinegar hoodie, meditation plaid literally banh mi bitters fingerstache quinoa food truck single-origin coffee pabst retro cardigan. Put a bird on it pork belly pug art party forage listicle flexitarian portland. Typewriter narwhal 90's, fingerstache sustainable ennui austin. Occupy whatever swag 90's. Aesthetic lo-fi stumptown swag.</div>
+<br>
+<div>Neutra readymade retro pug, hella tilde bushwick heirloom cronut post-ironic shoreditch actually. Readymade fingerstache whatever you probably haven't heard of them pabst farm-to-table. Everyday carry shoreditch hammock artisan, heirloom mustache paleo 8-bit cliche. Quinoa slow-carb chia pork belly franzen. Lo-fi vinyl cliche, lomo paleo yr sustainable keffiyeh offal +1 poutine. Meh fanny pack distillery, helvetica next level fashion axe thundercats. Pop-up brunch artisan gentrify banjo, PBR&B skateboard.</div>
+<br>
+Listicle yr disrupt craft beer. Ennui leggings crucifix skateboard banh mi, small batch intelligentsia. PBR&B neutra kinfolk, slow-carb biodiesel pour-over four dollar toast freegan sustainable DIY forage trust fund aesthetic quinoa. Heirloom jean shorts ramps sartorial 90's hashtag, ethical organic put a bird on it wolf. Master cleanse messenger bag small batch, williamsburg keytar kogi trust fund fanny pack ramps tilde jean shorts polaroid mlkshk kombucha franzen. Chartreuse organic YOLO semiotics forage. Meditation sustainable bitters fap, fanny pack beard lomo hammock 90's bespoke mustache leggings pour-over occupy scenester.
+</div>
+</body>
+<script>
+    document.registerProperty('--border-corner-length', '<number>');
+    document.registerProperty('--border-corner-width', '<number>');
+    document.registerProperty('--border-corner-gradient', '<number>');
+    paintWorker.importScripts('paint.js');
+
+    var i = 10;
+    var len = 0;
+    var doIt = true;
+
+    var func = function() {
+        var el = document.getElementsByClassName('quote')[0];
+        el.setAttribute('style', '--border-corner-length: ' + len);
+        if (i--) requestAnimationFrame(func);
+
+    };
+
+    var animation = null;
+    var seen = false;
+    var el = document.getElementsByClassName('quote')[0];
+
+    var scroll = function() {
+        var scrollEl = document.scrollingElement;
+
+        var triggerPos = scrollEl.clientHeight / 2 - el.clientHeight + 50; 
+
+        if (el.offsetTop - scrollEl.scrollTop < triggerPos) {
+            if (seen && doIt) {
+                animation = el.animate([], {duration: 5000, easing: 'ease'});
+                requestAnimationFrame(anim);
+            } else {
+                i = 10;
+                len = 20;
+                func();
+            }
+            return;
+        }
+
+        seen = true;
+
+        requestAnimationFrame(scroll);
+    };
+    requestAnimationFrame(scroll);
+
+    var anim = function() {
+        if (animation && animation.playState == 'finished') {
+            animation = null;
+            i = 10;
+            len = 20;
+            func();
+            return;
+        }
+
+        var progress = Math.max(0, Math.min(1, animation ? animation.currentTime / 500 : 1));
+        el.setAttribute('style', '--border-corner-length: ' + (progress * 20).toFixed(4));
+        requestAnimationFrame(anim);
+    };
+</script>
+</html>
